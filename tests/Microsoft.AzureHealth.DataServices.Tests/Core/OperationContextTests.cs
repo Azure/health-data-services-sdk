@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AzureHealth.DataServices.Pipelines;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +11,7 @@ namespace Microsoft.AzureHealth.DataServices.Tests.Core
     public class OperationContextTests
     {
         [TestMethod]
-        public void OperationContext_UpdateUri_Test()
+        public async Task OperationContext_UpdateUri_Test()
         {
             string content = "content";
             string uriString = "https://example.org/fhir/Patient/1";
@@ -18,7 +19,7 @@ namespace Microsoft.AzureHealth.DataServices.Tests.Core
             HttpMethod expectedMethod = HttpMethod.Post;
 
             HttpRequestMessage request = new(HttpMethod.Get, new Uri(uriString));
-            OperationContext context = new(request);
+            OperationContext context = await OperationContext.CreateAsync(request);
             context.UpdateFhirRequestUri(expectedMethod, "fhir", "Patient", "2");
             context.ContentString = content;
 
@@ -28,14 +29,14 @@ namespace Microsoft.AzureHealth.DataServices.Tests.Core
         }
 
         [TestMethod]
-        public void OperationContext_Properties_Test()
+        public async Task OperationContext_Properties_Test()
         {
             string propKey = "test";
             string propValue = "value";
             string uriString = "https://example.org/fhir/Patient/1";
 
             HttpRequestMessage request = new(HttpMethod.Get, new Uri(uriString));
-            OperationContext context = new(request);
+            OperationContext context = await OperationContext.CreateAsync(request);
             context.Properties.Add(propKey, propValue);
             string actualValue = context.Properties[propKey];
             Assert.AreEqual(propValue, actualValue, "Property mismatch.");

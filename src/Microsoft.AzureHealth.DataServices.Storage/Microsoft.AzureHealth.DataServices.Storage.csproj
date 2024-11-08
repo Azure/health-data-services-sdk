@@ -5,6 +5,7 @@
     <PackageId>Microsoft.AzureHealth.DataServices.Storage</PackageId>
     <AssemblyName>Microsoft.AzureHealth.DataServices.Storage</AssemblyName>
     <Description>Storage library to assist with creating custom operations for Azure Health Data Services.</Description>
+    <WarningsNotAsErrors>NU1903</WarningsNotAsErrors> <!-- To be able to restore Microsoft.Extensions.Caching.Memory -->
   </PropertyGroup>
 
   <ItemGroup>

@@ -29,29 +29,14 @@ namespace Microsoft.AzureHealth.DataServices.Pipelines
         /// Creates an instance of OperationContext
         /// </summary>
         /// <param name="message">Initial http request message</param>
-        public OperationContext(HttpRequestMessage message)
-        {
-            _ = message ?? throw new ArgumentNullException(nameof(message));
-
-            Request = message;
-            properties = new Dictionary<string, string>();
-            headers = new HttpCustomHeaderCollection();
-            SetContentAsync(message).GetAwaiter().GetResult();
-        }
-
-        /// <summary>
-        /// Creates an instance of OperationContext
-        /// </summary>
-        /// <param name="message">Initial http request message</param>
         /// <param name="headers">Initial header collection</param>
-        public OperationContext(HttpRequestMessage message, IHttpCustomHeaderCollection headers)
+        private OperationContext(HttpRequestMessage message, IHttpCustomHeaderCollection headers)
         {
             _ = message ?? throw new ArgumentNullException(nameof(message));
 
             Request = message;
             properties = new Dictionary<string, string>();
             this.headers = headers;
-            SetContentAsync(message).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -97,6 +82,16 @@ namespace Microsoft.AzureHealth.DataServices.Pipelines
         /// Gets or sets an exception when a fatal error occurs processing the operation context
         /// </summary>
         public Exception Error { get; set; }
+
+        public static async Task<OperationContext> CreateAsync(HttpRequestMessage message) =>
+            await CreateAsync(message, new HttpCustomHeaderCollection());
+
+        public static async Task<OperationContext> CreateAsync(HttpRequestMessage message, IHttpCustomHeaderCollection headers)
+        {
+            OperationContext context = new(message, headers);
+            await context.SetContentAsync(message);
+            return context;
+        }
 
         /// <summary>
         /// Updates the request URI and method.

@@ -9,6 +9,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.AzureHealth.DataServices.Channels;
 using Microsoft.AzureHealth.DataServices.Filters;
+using Microsoft.AzureHealth.DataServices.Headers;
 using Microsoft.AzureHealth.DataServices.Pipelines;
 using Microsoft.AzureHealth.DataServices.Tests.Assets;
 using Microsoft.Extensions.Logging;
@@ -293,6 +294,38 @@ namespace Microsoft.AzureHealth.DataServices.Tests.Core
             IInputChannelCollection channels = new InputChannelCollection();
             filters.Add(new FakeFilter());
             filters.Add(new FakeFilterWithContent());
+            channels.Add(new FakeChannel());
+
+            IPipeline<HttpRequestMessage, HttpResponseMessage> pipeline = new WebPipeline(filters, channels);
+
+            bool complete = false;
+            pipeline.OnComplete += (a, args) =>
+            {
+                complete = true;
+            };
+
+            HttpResponseMessage response = await pipeline.ExecuteAsync(request);
+            Assert.IsNotNull(response, "Response is null.");
+            Assert.IsTrue(complete, "Pipeline not complete.");
+            string actualContent = await response.Content.ReadAsStringAsync();
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, "Http status code mismatch.");
+            Assert.AreEqual(content, actualContent, "Content mismatch.");
+        }
+
+        [TestMethod]
+        public async Task WebPipeline_WithLongRunningContent_Test()
+        {
+            string content = "{ \"property\": \"value\" }";
+            HttpMethod method = HttpMethod.Get;
+            string requestUriString = "http://example.org/test";
+            HttpRequestMessage request = new(method, requestUriString);
+            request.Content = new DelayedHttpContent(content);
+
+            IInputFilterCollection filters = new InputFilterCollection();
+            IInputChannelCollection channels = new InputChannelCollection();
+            filters.Add(new FakeFilter());
+
+            // filters.Add(new FakeFilterWithContent());
             channels.Add(new FakeChannel());
 
             IPipeline<HttpRequestMessage, HttpResponseMessage> pipeline = new WebPipeline(filters, channels);
