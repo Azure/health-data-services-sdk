@@ -122,7 +122,7 @@ namespace Microsoft.AzureHealth.DataServices.Pipelines
 
             try
             {
-                _context = new(request, _headers);
+                _context = await OperationContext.CreateAsync(request, _headers);
 
                 _context = await ExecuteFiltersAsync(_inputFilters, _context);
 
@@ -222,7 +222,7 @@ namespace Microsoft.AzureHealth.DataServices.Pipelines
 
                         logger?.LogInformation("Pipeline {Name}-{Id} channel {ChannelName}-{ChannelId} is in state {State}.", Name, Id, channel.Name, channel.Id, channel.State);
 
-                        var contentType = context.Request.Content?.Headers.ContentType.ToString();
+                        var contentType = context.Request.Content?.Headers.ContentType?.ToString();
                         contentType ??= context.Request.Headers.Accept.ToString();
 
                         await channel.SendAsync(context.Content, new object[] { contentType });
